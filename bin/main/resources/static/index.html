@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Devis et Factures</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #f5f7fb;
+        }
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 240px;
+            background: #0d6efd;
+            color: white;
+            padding: 1.5rem 1rem;
+        }
+        .sidebar .brand {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .sidebar a {
+            color: #e3efff;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+        .sidebar a.active,
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+        .content {
+            flex: 1;
+            padding: 1.5rem 2rem;
+        }
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        .card {
+            box-shadow: 0 0.25rem 0.5rem rgba(15, 23, 42, 0.08);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <!-- Sidebar navigation -->
+    <nav class="sidebar">
+        <div class="brand">Gestion Devis &amp; Factures</div>
+        <a href="#" data-section="dashboard" class="nav-link active">Tableau de bord</a>
+        <a href="#" data-section="clients" class="nav-link">Clients</a>
+        <a href="#" data-section="produits" class="nav-link">Produits</a>
+        <a href="#" data-section="devis" class="nav-link">Devis</a>
+        <a href="#" data-section="factures" class="nav-link">Factures</a>
+    </nav>
+
+    <!-- Main content -->
+    <main class="content">
+        <!-- Dashboard section -->
+        <section id="dashboard" class="page-section active">
+            <h1 class="mb-4">Tableau de bord - Recherche</h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Recherche par ID</h5>
+                    <form id="searchForm" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="searchInput" class="form-label">ID(s) à rechercher</label>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Ex: 1, 2, 3 ou un seul ID">
+                            <div class="form-text">Entrez un ou plusieurs ID(s) séparés par des virgules</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Type de recherche</label>
+                            <select class="form-select" id="searchType">
+                                <option value="client">Client</option>
+                                <option value="produit">Produit</option>
+                                <option value="devis">Devis</option>
+                                <option value="facture">Facture</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Options</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showRelated" checked>
+                                <label class="form-check-label" for="showRelated">
+                                    Afficher toutes les données liées
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Rechercher</button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearSearch">Effacer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results area -->
+            <div id="searchResults" style="display: none;">
+                <!-- Client results -->
+                <div id="clientResult" class="card mb-3" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title">Client(s) trouvé(s)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="searchClientTable">
+                                <thead>
+                                    <tr><th>ID</th><th>Nom</th><th>Email</th><th>Téléphone</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Produit results -->
+                <div id="produitResult" class="card mb-3" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title">Produit(s) trouvé(s)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="searchProduitTable">
+                                <thead>
+                                    <tr><th>ID</th><th>Nom</th><th>Prix unitaire</th><th>Stock</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devis results -->
+                <div id="devisResult" class="card mb-3" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title">Devis trouvé(s)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="searchDevisTable">
+                                <thead>
+                                    <tr><th>ID</th><th>ID Client</th><th>Date</th><th>Total HT</th><th>Total TTC</th><th>Statut</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facture results -->
+                <div id="factureResult" class="card mb-3" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title">Facture(s) trouvée(s)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="searchFactureTable">
+                                <thead>
+                                    <tr><th>ID</th><th>ID Client</th><th>Date</th><th>Montant TTC</th><th>Mode paiement</th><th>Statut</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related data section -->
+                <div id="relatedData" style="display: none;">
+                    <h5 class="mb-3">Données liées</h5>
+                    
+                    <!-- Related Devis -->
+                    <div id="relatedDevis" class="card mb-3" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title">Devis liés</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped" id="relatedDevisTable">
+                                    <thead>
+                                        <tr><th>ID</th><th>ID Client</th><th>Date</th><th>Total HT</th><th>Total TTC</th><th>Statut</th></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Factures -->
+                    <div id="relatedFactures" class="card mb-3" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title">Factures liées</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped" id="relatedFacturesTable">
+                                    <thead>
+                                        <tr><th>ID</th><th>ID Client</th><th>Date</th><th>Montant TTC</th><th>Mode paiement</th><th>Statut</th></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Clients (for produit search) -->
+                    <div id="relatedClients" class="card mb-3" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title">Clients liés</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped" id="relatedClientsTable">
+                                    <thead>
+                                        <tr><th>ID</th><th>Nom</th><th>Email</th><th>Téléphone</th></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clients section -->
+        <section id="clients" class="page-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Clients</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Nouveau client</h5>
+                            <form id="clientForm" class="row g-2">
+                                <div class="col-12">
+                                    <label for="nom" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="nom" placeholder="Nom complet" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" placeholder="email@exemple.com">
+                                </div>
+                                <div class="col-12">
+                                    <label for="telephone" class="form-label">Téléphone</label>
+                                    <input type="text" class="form-control" id="telephone" placeholder="+33 6 12 34 56 78">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button type="submit" class="btn btn-primary w-100">Ajouter client</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">Liste des clients</h5>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle mb-0" id="clientsTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Téléphone</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Produits section -->
+        <section id="produits" class="page-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Produits</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Nouveau produit</h5>
+                            <form id="produitForm" class="row g-2">
+                                <div class="col-12">
+                                    <label for="produitNom" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="produitNom" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="produitPrix" class="form-label">Prix unitaire (€)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="produitPrix" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="produitStock" class="form-label">Stock</label>
+                                    <input type="number" min="0" class="form-control" id="produitStock" required>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button type="submit" class="btn btn-primary w-100">Ajouter produit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">Catalogue des produits</h5>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle mb-0" id="produitsTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nom</th>
+                                        <th>Prix unitaire</th>
+                                        <th>Stock</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Devis section -->
+        <section id="devis" class="page-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Devis</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-5 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Nouveau devis (multi-produits)</h5>
+                            <form id="devisForm" class="row g-2">
+                                <div class="col-12">
+                                    <label for="devisClientId" class="form-label">ID client</label>
+                                    <input type="number" min="1" class="form-control" id="devisClientId" required>
+                                    <div class="form-text">Utilisez un ID client existant.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="devisDate" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="devisDate" required>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Lignes de produits</label>
+                                    <div class="table-responsive mb-2">
+                                        <table class="table table-sm align-middle" id="devisDetailsTable">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 40%">Produit</th>
+                                                <th style="width: 20%">Quantité</th>
+                                                <th style="width: 20%">PU (€)</th>
+                                                <th style="width: 20%">Total (€)</th>
+                                                <th style="width: 5%"></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="addDevisLine">+ Ajouter une ligne</button>
+                                </div>
+
+                                <div class="col-6">
+                                    <label for="devisTotalHt" class="form-label">Total HT (€)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="devisTotalHt">
+                                    <div class="form-text">Vous pouvez saisir manuellement ou laisser le calcul automatique.</div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="devisTotalTtc" class="form-label">Total TTC (€)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="devisTotalTtc" readonly>
+                                    <div class="form-text">Ici TTC = HT (pas de TVA). Ajustez si vous ajoutez une TVA.</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="devisStatut" class="form-label">Statut</label>
+                                    <select class="form-select" id="devisStatut">
+                                        <option value="BROUILLON">Brouillon</option>
+                                        <option value="ENVOYE">Envoyé</option>
+                                        <option value="VALIDE">Validé</option>
+                                        <option value="REFUSE">Refusé</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button type="submit" class="btn btn-primary w-100">Créer devis</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">Liste des devis</h5>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle mb-0" id="devisTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>ID client</th>
+                                        <th>Date</th>
+                                        <th>Total HT</th>
+                                        <th>Total TTC</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Factures section -->
+        <section id="factures" class="page-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Factures</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Nouvelle facture</h5>
+                            <form id="factureForm" class="row g-2">
+                                <div class="col-12">
+                                    <label for="factureClientId" class="form-label">ID client</label>
+                                    <input type="number" min="1" class="form-control" id="factureClientId" required>
+                                    <div class="form-text">Les devis VALIDÉ de ce client seront utilisés pour le montant.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="factureDate" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="factureDate" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="factureMontant" class="form-label">Montant TTC (€)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="factureMontant" readonly>
+                                    <div class="form-text">
+                                        Somme des <strong>totalTtc</strong> de tous les devis avec statut <strong>VALIDE</strong> pour ce client.
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" id="btnCalcFactureFromDevis" class="btn btn-outline-secondary w-100">
+                                        Calculer à partir des devis validés
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <label for="factureModePaiement" class="form-label">Mode de paiement</label>
+                                    <input type="text" class="form-control" id="factureModePaiement" placeholder="CB, Virement, Chèque...">
+                                </div>
+                                <div class="col-12">
+                                    <label for="factureStatut" class="form-label">Statut</label>
+                                    <select class="form-select" id="factureStatut">
+                                        <option value="NON_PAYEE">Non payée</option>
+                                        <option value="PAYEE">Payée</option>
+                                        <option value="EN_RETARD">En retard</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button type="submit" class="btn btn-primary w-100">Créer facture</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0">Liste des factures</h5>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-striped align-middle mb-0" id="facturesTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>ID client</th>
+                                        <th>Date</th>
+                                        <th>Montant TTC</th>
+                                        <th>Mode paiement</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                        <th>PDF</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+                            <hr>
+                            <h6 class="mb-2">Devis VALIDÉ utilisés pour le montant (client sélectionné)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped align-middle mb-0" id="factureDevisTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>ID devis</th>
+                                        <th>Date</th>
+                                        <th>Total TTC</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const API_BASE = '/api';
+
+    // Simple SPA navigation between sections
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    const sections = document.querySelectorAll('.page-section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = link.getAttribute('data-section');
+
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            sections.forEach(sec => {
+                if (sec.id === target) {
+                    sec.classList.add('active');
+                } else {
+                    sec.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // --- Clients logic ---
+    let editingClientId = null;
+    async function loadClients() {
+        try {
+            const res = await fetch(API_BASE + '/clients');
+            const clients = await res.json();
+            const tbody = document.querySelector('#clientsTable tbody');
+            tbody.innerHTML = '';
+            clients.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.nom}</td>
+                    <td>${c.email || ''}</td>
+                    <td>${c.telephone || ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" data-client-edit="${c.id}">Modifier</button>
+                        <button class="btn btn-sm btn-outline-danger" data-client-delete="${c.id}">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // attach edit/delete listeners
+            document.querySelectorAll('button[data-client-edit]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-client-edit'), 10);
+                    const client = clients.find(cl => cl.id === id);
+                    if (!client) return;
+                    document.getElementById('nom').value = client.nom || '';
+                    document.getElementById('email').value = client.email || '';
+                    document.getElementById('telephone').value = client.telephone || '';
+                    editingClientId = id;
+                    const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+                    if (submitBtn) submitBtn.textContent = 'Mettre à jour le client';
+                });
+            });
+
+            document.querySelectorAll('button[data-client-delete]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = parseInt(btn.getAttribute('data-client-delete'), 10);
+                    if (!confirm('Supprimer ce client ?')) return;
+                    try {
+                        await fetch(API_BASE + '/clients/' + id, { method: 'DELETE' });
+                        if (editingClientId === id) {
+                            editingClientId = null;
+                            clientForm.reset();
+                            const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+                            if (submitBtn) submitBtn.textContent = 'Ajouter client';
+                        }
+                        await loadClients();
+                    } catch (err) {
+                        console.error('Erreur lors de la suppression du client', err);
+                    }
+                });
+            });
+        } catch (err) {
+            console.error('Erreur lors du chargement des clients', err);
+        }
+    }
+
+    const clientForm = document.getElementById('clientForm');
+    if (clientForm) {
+        clientForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const client = {
+                nom: document.getElementById('nom').value,
+                email: document.getElementById('email').value,
+                telephone: document.getElementById('telephone').value
+            };
+            try {
+                if (editingClientId) {
+                    await fetch(API_BASE + '/clients/' + editingClientId, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(client)
+                    });
+                } else {
+                    await fetch(API_BASE + '/clients', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(client)
+                    });
+                }
+                editingClientId = null;
+                const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Ajouter client';
+                e.target.reset();
+                await loadClients();
+            } catch (err) {
+                console.error('Erreur lors de la sauvegarde du client', err);
+            }
+        });
+    }
+
+    let produitsCache = [];
+    let editingProduitId = null;
+
+    // --- Produits logic ---
+    async function loadProduits() {
+        try {
+            const res = await fetch(API_BASE + '/produits');
+            const produits = await res.json();
+            produitsCache = produits;
+
+            const tbody = document.querySelector('#produitsTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            produits.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.nom}</td>
+                    <td>${p.prixUnitaire ?? ''}</td>
+                    <td>${p.stock ?? ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" data-produit-edit="${p.id}">Modifier</button>
+                        <button class="btn btn-sm btn-outline-danger" data-produit-delete="${p.id}">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Remplir la liste déroulante des produits pour les devis
+            const produitSelect = document.getElementById('devisProduitId');
+            const produitInfo = document.getElementById('devisProduitInfo');
+            if (produitSelect) {
+                // garder l'option par défaut
+                produitSelect.innerHTML = '<option value=\"\">-- Sélectionner un produit --</option>';
+                produits.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.id} - ${p.nom} (${p.prixUnitaire ?? ''} €)`;
+                    produitSelect.appendChild(opt);
+                });
+
+                produitSelect.addEventListener('change', () => {
+                    const selectedId = parseInt(produitSelect.value || '0', 10);
+                    const prod = produitsCache.find(x => x.id === selectedId);
+                    if (prod && produitInfo) {
+                        produitInfo.textContent = `Prix unitaire sélectionné : ${prod.prixUnitaire ?? ''} €`;
+                    } else if (produitInfo) {
+                        produitInfo.textContent = '';
+                    }
+                    recalcDevisTotalTtc();
+                });
+            }
+        } catch (err) {
+            console.error('Erreur lors du chargement des produits', err);
+        }
+
+        // attach edit/delete handlers
+        document.querySelectorAll('button[data-produit-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = parseInt(btn.getAttribute('data-produit-edit'), 10);
+                const prod = produitsCache.find(p => p.id === id);
+                if (!prod) return;
+                document.getElementById('produitNom').value = prod.nom || '';
+                document.getElementById('produitPrix').value = prod.prixUnitaire ?? '';
+                document.getElementById('produitStock').value = prod.stock ?? '';
+                editingProduitId = id;
+                const submitBtn = document.querySelector('#produitForm button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Mettre à jour le produit';
+            });
+        });
+
+        document.querySelectorAll('button[data-produit-delete]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = parseInt(btn.getAttribute('data-produit-delete'), 10);
+                if (!confirm('Supprimer ce produit ?')) return;
+                try {
+                    await fetch(API_BASE + '/produits/' + id, { method: 'DELETE' });
+                    if (editingProduitId === id) {
+                        editingProduitId = null;
+                        produitForm.reset();
+                        const submitBtn = document.querySelector('#produitForm button[type="submit"]');
+                        if (submitBtn) submitBtn.textContent = 'Ajouter produit';
+                    }
+                    await loadProduits();
+                } catch (err) {
+                    console.error('Erreur lors de la suppression du produit', err);
+                }
+            });
+        });
+    }
+
+    const produitForm = document.getElementById('produitForm');
+    if (produitForm) {
+        produitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const produit = {
+                nom: document.getElementById('produitNom').value,
+                prixUnitaire: parseFloat(document.getElementById('produitPrix').value),
+                stock: parseInt(document.getElementById('produitStock').value || '0', 10)
+            };
+            try {
+                if (editingProduitId) {
+                    await fetch(API_BASE + '/produits/' + editingProduitId, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(produit)
+                    });
+                } else {
+                    await fetch(API_BASE + '/produits', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(produit)
+                    });
+                }
+                editingProduitId = null;
+                const submitBtn = document.querySelector('#produitForm button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Ajouter produit';
+                e.target.reset();
+                await loadProduits();
+            } catch (err) {
+                console.error('Erreur lors de la sauvegarde du produit', err);
+            }
+        });
+    }
+
+    // --- Devis logic (multi-produits) ---
+    let editingDevisId = null;
+    const devisLinesTbody = document.querySelector('#devisDetailsTable tbody');
+    const addDevisLineBtn = document.getElementById('addDevisLine');
+
+    function createDevisLineRow(line = {}) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm devis-produit">
+                    <option value="">-- Produit --</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" min="1" class="form-control form-control-sm devis-qty" value="${line.quantite ?? 1}">
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" class="form-control form-control-sm devis-pu" value="${line.prixUnitaire ?? ''}">
+            </td>
+            <td class="devis-line-total">0.00</td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger devis-remove-line">X</button></td>
+        `;
+        const select = tr.querySelector('.devis-produit');
+        // populate options from produitsCache
+        produitsCache.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.id} - ${p.nom} (${p.prixUnitaire ?? ''} €)`;
+            select.appendChild(opt);
+        });
+        if (line.produitId) {
+            select.value = line.produitId;
+        }
+
+        // set PU if selecting product
+        select.addEventListener('change', () => {
+            const selectedId = parseInt(select.value || '0', 10);
+            const prod = produitsCache.find(x => x.id === selectedId);
+            if (prod && tr.querySelector('.devis-pu').value === '') {
+                tr.querySelector('.devis-pu').value = prod.prixUnitaire ?? '';
+            }
+            recalcDevisTotals();
+        });
+
+        tr.querySelector('.devis-qty').addEventListener('input', recalcDevisTotals);
+        tr.querySelector('.devis-pu').addEventListener('input', recalcDevisTotals);
+        tr.querySelector('.devis-remove-line').addEventListener('click', () => {
+            tr.remove();
+            recalcDevisTotals();
+        });
+
+        return tr;
+    }
+
+    function recalcDevisTotals() {
+        let total = 0;
+        if (devisLinesTbody) {
+            devisLinesTbody.querySelectorAll('tr').forEach(tr => {
+                const qty = parseFloat(tr.querySelector('.devis-qty').value || '0');
+                const pu = parseFloat(tr.querySelector('.devis-pu').value || '0');
+                const lineTotal = qty * pu;
+                total += lineTotal;
+                const cell = tr.querySelector('.devis-line-total');
+                if (cell) cell.textContent = lineTotal.toFixed(2);
+            });
+        }
+        const htInput = document.getElementById('devisTotalHt');
+        const ttcInput = document.getElementById('devisTotalTtc');
+        // Only auto-update HT if it's empty or very small (to allow manual override)
+        if (htInput) {
+            const currentHt = parseFloat(htInput.value || '0');
+            if (currentHt < 0.01 && total > 0) {
+                htInput.value = total.toFixed(2);
+            }
+        }
+        // Always sync TTC with HT
+        if (htInput && ttcInput) {
+            const htVal = parseFloat(htInput.value || '0');
+            ttcInput.value = htVal.toFixed(2);
+        }
+    }
+
+    function resetDevisFormButtons() {
+        const submitBtn = document.querySelector('#devisForm button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Créer devis';
+    }
+
+    if (addDevisLineBtn && devisLinesTbody) {
+        addDevisLineBtn.addEventListener('click', () => {
+            devisLinesTbody.appendChild(createDevisLineRow());
+            recalcDevisTotals();
+        });
+        // add one default line
+        devisLinesTbody.appendChild(createDevisLineRow());
+    }
+    async function loadDevis() {
+        try {
+            const res = await fetch(API_BASE + '/devis');
+            if (!res.ok) {
+                console.error('Erreur HTTP lors du chargement des devis:', res.status);
+                return;
+            }
+            const devisList = await res.json();
+            const tbody = document.querySelector('#devisTable tbody');
+            if (!tbody) {
+                console.error('Tableau devis introuvable dans le DOM');
+                return;
+            }
+            tbody.innerHTML = '';
+            if (!devisList || devisList.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="7" class="text-center text-muted">Aucun devis trouvé</td>';
+                tbody.appendChild(tr);
+                return;
+            }
+            devisList.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${d.id}</td>
+                    <td>${d.client ? d.client.id : ''}</td>
+                    <td>${d.date || ''}</td>
+                    <td>${d.totalHt ?? ''}</td>
+                    <td>${d.totalTtc ?? ''}</td>
+                    <td>${d.statut || ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" data-devis-edit="${d.id}">Modifier</button>
+                        <button class="btn btn-sm btn-outline-danger" data-devis-delete="${d.id}">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // attach edit/delete handlers
+            document.querySelectorAll('button[data-devis-edit]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-devis-edit'), 10);
+                    const devis = devisList.find(d => d.id === id);
+                    if (!devis) return;
+                    document.getElementById('devisClientId').value = devis.client ? devis.client.id : '';
+                    document.getElementById('devisDate').value = devis.date || '';
+                    // rebuild lines
+                    if (devisLinesTbody) {
+                        devisLinesTbody.innerHTML = '';
+                        if (devis.details && devis.details.length) {
+                            devis.details.forEach(det => {
+                                devisLinesTbody.appendChild(createDevisLineRow({
+                                    produitId: det.produit ? det.produit.id : '',
+                                    quantite: det.quantite,
+                                    prixUnitaire: det.prixUnitaire
+                                }));
+                            });
+                        } else {
+                            devisLinesTbody.appendChild(createDevisLineRow());
+                        }
+                    }
+                    recalcDevisTotals();
+                    document.getElementById('devisStatut').value = devis.statut || 'BROUILLON';
+                    editingDevisId = id;
+                    const submitBtn = document.querySelector('#devisForm button[type="submit"]');
+                    if (submitBtn) submitBtn.textContent = 'Mettre à jour le devis';
+                });
+            });
+
+            document.querySelectorAll('button[data-devis-delete]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = parseInt(btn.getAttribute('data-devis-delete'), 10);
+                    if (!confirm('Supprimer ce devis ?')) return;
+                    try {
+                        await fetch(API_BASE + '/devis/' + id, { method: 'DELETE' });
+                        if (editingDevisId === id) {
+                            editingDevisId = null;
+                            devisForm.reset();
+                            if (devisLinesTbody) {
+                                devisLinesTbody.innerHTML = '';
+                                devisLinesTbody.appendChild(createDevisLineRow());
+                            }
+                            resetDevisFormButtons();
+                        }
+                        await loadDevis();
+                    } catch (err) {
+                        console.error('Erreur lors de la suppression du devis', err);
+                    }
+                });
+            });
+        } catch (err) {
+            console.error('Erreur lors du chargement des devis', err);
+        }
+    }
+
+    const devisForm = document.getElementById('devisForm');
+    if (devisForm) {
+        const devisTotalHtInput = document.getElementById('devisTotalHt');
+        const devisTotalTtcInput = document.getElementById('devisTotalTtc');
+
+        // When Total HT is manually changed, update TTC (TTC = HT for now)
+        if (devisTotalHtInput) {
+            devisTotalHtInput.addEventListener('input', () => {
+                const htVal = parseFloat(devisTotalHtInput.value || '0');
+                if (devisTotalTtcInput) {
+                    devisTotalTtcInput.value = isNaN(htVal) ? '' : htVal.toFixed(2);
+                }
+            });
+        }
+
+        devisForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            recalcDevisTotals();
+
+            // Build details from lines
+            const details = [];
+            if (devisLinesTbody) {
+                devisLinesTbody.querySelectorAll('tr').forEach(tr => {
+                    const prodId = parseInt(tr.querySelector('.devis-produit').value || '0', 10);
+                    const qty = parseInt(tr.querySelector('.devis-qty').value || '0', 10);
+                    const pu = parseFloat(tr.querySelector('.devis-pu').value || '0');
+                    if (prodId && qty > 0) {
+                        details.push({
+                            produit: { id: prodId },
+                            quantite: qty,
+                            prixUnitaire: pu
+                        });
+                    }
+                });
+            }
+
+            const devis = {
+                client: { id: parseInt(document.getElementById('devisClientId').value, 10) },
+                date: document.getElementById('devisDate').value,
+                totalHt: parseFloat(document.getElementById('devisTotalHt').value || '0'),
+                totalTtc: parseFloat(document.getElementById('devisTotalTtc').value || '0'),
+                statut: document.getElementById('devisStatut').value,
+                details
+            };
+            try {
+                if (editingDevisId) {
+                    await fetch(API_BASE + '/devis/' + editingDevisId, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(devis)
+                    });
+                } else {
+                    await fetch(API_BASE + '/devis', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(devis)
+                    });
+                }
+                editingDevisId = null;
+                resetDevisFormButtons();
+                e.target.reset();
+                if (devisLinesTbody) {
+                    devisLinesTbody.innerHTML = '';
+                    devisLinesTbody.appendChild(createDevisLineRow());
+                }
+                await loadDevis();
+            } catch (err) {
+                console.error('Erreur lors de la création du devis', err);
+            }
+        });
+    }
+
+    // --- Factures logic (simplified) ---
+    let editingFactureId = null;
+    async function loadValidDevisForClient(clientId) {
+        try {
+            const res = await fetch(API_BASE + '/devis');
+            const devisList = await res.json();
+            const tbody = document.querySelector('#factureDevisTable tbody');
+            const montantInput = document.getElementById('factureMontant');
+            if (!tbody || !montantInput) return;
+
+            const validDevis = devisList.filter(d => {
+                const devisClientId = d.client ? (typeof d.client === 'object' ? d.client.id : d.client) : null;
+                return devisClientId && parseInt(devisClientId, 10) === clientId && d.statut === 'VALIDE';
+            });
+
+            tbody.innerHTML = '';
+            let total = 0;
+            validDevis.forEach(d => {
+                const ttc = parseFloat(d.totalTtc || 0);
+                total += isNaN(ttc) ? 0 : ttc;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${d.id}</td>
+                    <td>${d.date || ''}</td>
+                    <td>${d.totalTtc ?? ''}</td>
+                    <td>${d.statut || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            montantInput.value = total.toFixed(2);
+        } catch (err) {
+            console.error('Erreur lors du chargement des devis pour la facture', err);
+        }
+    }
+    async function loadFactures() {
+        try {
+            const res = await fetch(API_BASE + '/factures');
+            const factures = await res.json();
+            const tbody = document.querySelector('#facturesTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            factures.forEach(f => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${f.id}</td>
+                    <td>${f.client ? f.client.id : ''}</td>
+                    <td>${f.date || ''}</td>
+                    <td>${f.montantTtc ?? ''}</td>
+                    <td>${f.modePaiement || ''}</td>
+                    <td>${f.statut || ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" data-facture-edit="${f.id}">Modifier</button>
+                        <button class="btn btn-sm btn-outline-danger" data-facture-delete="${f.id}">Supprimer</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" data-facture-id="${f.id}">
+                            PDF
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Attach click listeners for PDF buttons
+            document.querySelectorAll('#facturesTable button[data-facture-id]')
+                .forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-facture-id');
+                        window.open(`/api/pdf/facture/${id}`, '_blank');
+                    });
+                });
+
+            // Attach edit/delete handlers
+            document.querySelectorAll('button[data-facture-edit]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-facture-edit'), 10);
+                    const facture = factures.find(f => f.id === id);
+                    if (!facture) return;
+                    document.getElementById('factureClientId').value = facture.client ? facture.client.id : '';
+                    document.getElementById('factureDate').value = facture.date || '';
+                    document.getElementById('factureMontant').value = facture.montantTtc ?? '';
+                    document.getElementById('factureModePaiement').value = facture.modePaiement || '';
+                    document.getElementById('factureStatut').value = facture.statut || 'NON_PAYEE';
+                    editingFactureId = id;
+                    const submitBtn = document.querySelector('#factureForm button[type="submit"]');
+                    if (submitBtn) submitBtn.textContent = 'Mettre à jour la facture';
+                });
+            });
+
+            document.querySelectorAll('button[data-facture-delete]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = parseInt(btn.getAttribute('data-facture-delete'), 10);
+                    if (!confirm('Supprimer cette facture ?')) return;
+                    try {
+                        await fetch(API_BASE + '/factures/' + id, { method: 'DELETE' });
+                        if (editingFactureId === id) {
+                            editingFactureId = null;
+                            factureForm.reset();
+                            const submitBtn = document.querySelector('#factureForm button[type="submit"]');
+                            if (submitBtn) submitBtn.textContent = 'Créer facture';
+                        }
+                        await loadFactures();
+                    } catch (err) {
+                        console.error('Erreur lors de la suppression de la facture', err);
+                    }
+                });
+            });
+        } catch (err) {
+            console.error('Erreur lors du chargement des factures', err);
+        }
+    }
+
+    const factureForm = document.getElementById('factureForm');
+    if (factureForm) {
+        const clientIdInput = document.getElementById('factureClientId');
+        const btnCalcFromDevis = document.getElementById('btnCalcFactureFromDevis');
+
+        async function refreshMontantFromDevis() {
+            const clientId = parseInt(clientIdInput.value || '0', 10);
+            if (!clientId) return;
+            await loadValidDevisForClient(clientId);
+        }
+
+        if (btnCalcFromDevis) {
+            btnCalcFromDevis.addEventListener('click', refreshMontantFromDevis);
+        }
+
+        if (clientIdInput) {
+            clientIdInput.addEventListener('change', refreshMontantFromDevis);
+        }
+
+        factureForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clientId = parseInt(clientIdInput.value || '0', 10);
+            if (!clientId) return;
+
+            // Assurer que le montant est à jour
+            await refreshMontantFromDevis();
+
+            const facture = {
+                client: { id: clientId },
+                date: document.getElementById('factureDate').value,
+                montantTtc: parseFloat(document.getElementById('factureMontant').value || '0'),
+                modePaiement: document.getElementById('factureModePaiement').value,
+                statut: document.getElementById('factureStatut').value
+            };
+            try {
+                if (editingFactureId) {
+                    await fetch(API_BASE + '/factures/' + editingFactureId, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(facture)
+                    });
+                } else {
+                    await fetch(API_BASE + '/factures', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(facture)
+                    });
+                }
+                e.target.reset();
+                const factureDevisBody = document.querySelector('#factureDevisTable tbody');
+                if (factureDevisBody) {
+                    factureDevisBody.innerHTML = '';
+                }
+                editingFactureId = null;
+                const submitBtn = document.querySelector('#factureForm button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Créer facture';
+                await loadFactures();
+            } catch (err) {
+                console.error('Erreur lors de la création de la facture', err);
+            }
+        });
+    }
+
+    // --- Search functionality ---
+    const searchForm = document.getElementById('searchForm');
+    const clearSearchBtn = document.getElementById('clearSearch');
+
+    async function searchById(type, ids, showRelated) {
+        const idsArray = ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+        if (idsArray.length === 0) {
+            alert('Veuillez entrer au moins un ID valide');
+            return;
+        }
+
+        document.getElementById('searchResults').style.display = 'block';
+        
+        // Hide all result sections first
+        document.getElementById('clientResult').style.display = 'none';
+        document.getElementById('produitResult').style.display = 'none';
+        document.getElementById('devisResult').style.display = 'none';
+        document.getElementById('factureResult').style.display = 'none';
+        document.getElementById('relatedData').style.display = 'none';
+        document.getElementById('relatedDevis').style.display = 'none';
+        document.getElementById('relatedFactures').style.display = 'none';
+        document.getElementById('relatedClients').style.display = 'none';
+
+        try {
+            if (type === 'client') {
+                await searchClients(idsArray, showRelated);
+            } else if (type === 'produit') {
+                await searchProduits(idsArray, showRelated);
+            } else if (type === 'devis') {
+                await searchDevis(idsArray, showRelated);
+            } else if (type === 'facture') {
+                await searchFactures(idsArray, showRelated);
+            }
+        } catch (err) {
+            console.error('Erreur lors de la recherche', err);
+            alert('Erreur lors de la recherche: ' + err.message);
+        }
+    }
+
+    async function searchClients(ids, showRelated) {
+        const res = await fetch(API_BASE + '/clients');
+        const clients = await res.json();
+        const found = clients.filter(c => ids.includes(c.id));
+        
+        const tbody = document.querySelector('#searchClientTable tbody');
+        tbody.innerHTML = '';
+        found.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${c.id}</td>
+                <td>${c.nom || ''}</td>
+                <td>${c.email || ''}</td>
+                <td>${c.telephone || ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('clientResult').style.display = 'block';
+
+        if (showRelated && found.length > 0) {
+            await loadRelatedDataForClients(found.map(c => c.id));
+        }
+    }
+
+    async function searchProduits(ids, showRelated) {
+        const res = await fetch(API_BASE + '/produits');
+        const produits = await res.json();
+        const found = produits.filter(p => ids.includes(p.id));
+        
+        const tbody = document.querySelector('#searchProduitTable tbody');
+        tbody.innerHTML = '';
+        found.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p.id}</td>
+                <td>${p.nom || ''}</td>
+                <td>${p.prixUnitaire ?? ''}</td>
+                <td>${p.stock ?? ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('produitResult').style.display = 'block';
+
+        if (showRelated && found.length > 0) {
+            // For produits, we can show which clients have devis/factures using these products
+            // This is more complex, so we'll just show a message or skip for now
+        }
+    }
+
+    async function searchDevis(ids, showRelated) {
+        const res = await fetch(API_BASE + '/devis');
+        const devisList = await res.json();
+        const found = devisList.filter(d => ids.includes(d.id));
+        
+        const tbody = document.querySelector('#searchDevisTable tbody');
+        tbody.innerHTML = '';
+        found.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${d.id}</td>
+                <td>${d.client ? (typeof d.client === 'object' ? d.client.id : d.client) : ''}</td>
+                <td>${d.date || ''}</td>
+                <td>${d.totalHt ?? ''}</td>
+                <td>${d.totalTtc ?? ''}</td>
+                <td>${d.statut || ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('devisResult').style.display = 'block';
+
+        if (showRelated && found.length > 0) {
+            const clientIds = [...new Set(found.map(d => d.client ? (typeof d.client === 'object' ? d.client.id : d.client) : null).filter(id => id))];
+            if (clientIds.length > 0) {
+                await loadRelatedDataForClients(clientIds);
+            }
+        }
+    }
+
+    async function searchFactures(ids, showRelated) {
+        const res = await fetch(API_BASE + '/factures');
+        const factures = await res.json();
+        const found = factures.filter(f => ids.includes(f.id));
+        
+        const tbody = document.querySelector('#searchFactureTable tbody');
+        tbody.innerHTML = '';
+        found.forEach(f => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${f.id}</td>
+                <td>${f.client ? (typeof f.client === 'object' ? f.client.id : f.client) : ''}</td>
+                <td>${f.date || ''}</td>
+                <td>${f.montantTtc ?? ''}</td>
+                <td>${f.modePaiement || ''}</td>
+                <td>${f.statut || ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('factureResult').style.display = 'block';
+
+        if (showRelated && found.length > 0) {
+            const clientIds = [...new Set(found.map(f => f.client ? (typeof f.client === 'object' ? f.client.id : f.client) : null).filter(id => id))];
+            if (clientIds.length > 0) {
+                await loadRelatedDataForClients(clientIds);
+            }
+        }
+    }
+
+    async function loadRelatedDataForClients(clientIds) {
+        document.getElementById('relatedData').style.display = 'block';
+        
+        // Load all devis and factures
+        const [devisRes, facturesRes] = await Promise.all([
+            fetch(API_BASE + '/devis'),
+            fetch(API_BASE + '/factures')
+        ]);
+        const allDevis = await devisRes.json();
+        const allFactures = await facturesRes.json();
+
+        // Filter devis for these clients
+        const relatedDevis = allDevis.filter(d => {
+            const clientId = d.client ? (typeof d.client === 'object' ? d.client.id : d.client) : null;
+            return clientId && clientIds.includes(clientId);
+        });
+
+        // Filter factures for these clients
+        const relatedFactures = allFactures.filter(f => {
+            const clientId = f.client ? (typeof f.client === 'object' ? f.client.id : f.client) : null;
+            return clientId && clientIds.includes(clientId);
+        });
+
+        // Show related devis
+        if (relatedDevis.length > 0) {
+            const tbody = document.querySelector('#relatedDevisTable tbody');
+            tbody.innerHTML = '';
+            relatedDevis.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${d.id}</td>
+                    <td>${d.client ? (typeof d.client === 'object' ? d.client.id : d.client) : ''}</td>
+                    <td>${d.date || ''}</td>
+                    <td>${d.totalHt ?? ''}</td>
+                    <td>${d.totalTtc ?? ''}</td>
+                    <td>${d.statut || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('relatedDevis').style.display = 'block';
+        }
+
+        // Show related factures
+        if (relatedFactures.length > 0) {
+            const tbody = document.querySelector('#relatedFacturesTable tbody');
+            tbody.innerHTML = '';
+            relatedFactures.forEach(f => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${f.id}</td>
+                    <td>${f.client ? (typeof f.client === 'object' ? f.client.id : f.client) : ''}</td>
+                    <td>${f.date || ''}</td>
+                    <td>${f.montantTtc ?? ''}</td>
+                    <td>${f.modePaiement || ''}</td>
+                    <td>${f.statut || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('relatedFactures').style.display = 'block';
+        }
+    }
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const searchInput = document.getElementById('searchInput').value.trim();
+            const searchType = document.getElementById('searchType').value;
+            const showRelated = document.getElementById('showRelated').checked;
+            
+            if (!searchInput) {
+                alert('Veuillez entrer au moins un ID');
+                return;
+            }
+            
+            await searchById(searchType, searchInput, showRelated);
+        });
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('clientResult').style.display = 'none';
+            document.getElementById('produitResult').style.display = 'none';
+            document.getElementById('devisResult').style.display = 'none';
+            document.getElementById('factureResult').style.display = 'none';
+            document.getElementById('relatedData').style.display = 'none';
+        });
+    }
+
+    // Initial loads
+    loadClients();
+    loadProduits();
+    loadDevis();
+    loadFactures();
+</script>
+</body>
+</html>
+
+
