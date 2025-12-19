@@ -1,0 +1,16 @@
+com\example\gfactures\GfacturesApplication.class
+com\example\gfactures\repository\DevisRepository.class
+com\example\gfactures\controller\DevisController.class
+com\example\gfactures\model\Facture.class
+com\example\gfactures\controller\FactureController.class
+com\example\gfactures\controller\ProduitController.class
+com\example\gfactures\model\Client.class
+com\example\gfactures\model\DevisDetail.class
+com\example\gfactures\controller\ClientController.class
+com\example\gfactures\controller\FacturePdfController.class
+com\example\gfactures\repository\ClientRepository.class
+com\example\gfactures\repository\FactureRepository.class
+com\example\gfactures\model\Devis.class
+com\example\gfactures\model\Produit.class
+com\example\gfactures\repository\ProduitRepository.class
+com\example\gfactures\repository\DevisDetailRepository.class

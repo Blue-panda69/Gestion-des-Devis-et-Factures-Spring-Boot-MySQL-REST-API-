@@ -1,0 +1,16 @@
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\controller\ClientController.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\controller\DevisController.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\controller\FactureController.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\controller\FacturePdfController.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\controller\ProduitController.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\GfacturesApplication.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\model\Client.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\model\Devis.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\model\DevisDetail.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\model\Facture.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\model\Produit.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\repository\ClientRepository.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\repository\DevisDetailRepository.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\repository\DevisRepository.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\repository\FactureRepository.java
+C:\Users\Hunter\eclipse-workspace\GFactures\src\main\java\com\example\gfactures\repository\ProduitRepository.java
